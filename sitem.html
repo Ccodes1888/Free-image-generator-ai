@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Public AI Image Generator</title>
+<style>
+  body {
+    font-family: Arial, sans-serif;
+    text-align: center;
+    margin: 20px;
+  }
+  input {
+    width: 300px;
+    padding: 10px;
+    margin: 10px 0;
+  }
+  button {
+    padding: 10px 20px;
+    cursor: pointer;
+  }
+  img {
+    margin-top: 20px;
+    max-width: 512px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+  }
+  #history {
+    margin-top: 30px;
+  }
+  .history-item {
+    margin: 10px 0;
+  }
+</style>
+</head>
+<body>
+
+<h1>AI Image Generator</h1>
+<p>Enter a prompt and get AI-generated images</p>
+
+<input type="text" id="promptInput" placeholder="Enter your prompt" />
+<button onclick="generateImage()">Generate Image</button>
+
+<div id="result"></div>
+
+<h2>Prompt History</h2>
+<div id="history"></div>
+
+<script>
+// Replace this with your public backend URL (Flask server / ngrok / cloud)
+const BACKEND_URL = 'https://node64.lunes.host:3137';
+
+async function generateImage() {
+    const prompt = document.getElementById('promptInput').value.trim();
+    if (!prompt) return alert("Please enter a prompt");
+
+    const resultDiv = document.getElementById('result');
+    resultDiv.innerText = "Generating image...";
+
+    try {
+        const response = await fetch(`${BACKEND_URL}/generate`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ prompt })
+        });
+
+        const data = await response.json();
+        if (data.data && data.data[0].url) {
+            const imageUrl = data.data[0].url;
+            resultDiv.innerHTML = `<img src="${imageUrl}" alt="AI Image">`;
+            addToHistory(prompt, imageUrl);
+        } else {
+            resultDiv.innerText = "Failed to generate image.";
+            console.error(data);
+        }
+    } catch (err) {
+        resultDiv.innerText = "Error generating image.";
+        console.error(err);
+    }
+}
+
+function addToHistory(prompt, url) {
+    const historyDiv = document.getElementById('history');
+    const item = document.createElement('div');
+    item.className = 'history-item';
+    item.innerHTML = `<strong>${prompt}</strong><br><img src="${url}" alt="History Image" width="200">`;
+    historyDiv.prepend(item);
+}
+</script>
+
+</body>
+</html>
